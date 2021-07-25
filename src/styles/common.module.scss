@@ -1,1 +1,26 @@
-// TODO
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 5rem 18rem;
+}
+
+.postInfo {
+  display: flex;
+  justify-content: justify;
+  align-items: center;
+  margin-top: 1.2rem;
+  color: var(--info);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.05875rem;
+
+  time {
+    margin-right: 1.5rem;
+    margin-left: 0.5rem;
+  }
+
+  span {
+    margin-left: 0.5rem;
+    margin-right: 1.5rem;
+  }
+}
