@@ -42,27 +42,25 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
     setNextPage(postsPagination.next_page);
   }, [postsPagination]);
 
+  function createNewPost(prismicPost: Post[]): Post[] {
+    return prismicPost.map(post => ({
+      uid: post.uid,
+      first_publication_date: post.first_publication_date,
+      data: {
+        author: post.data.author,
+        subtitle: post.data.subtitle,
+        title: post.data.title,
+      },
+    }));
+  }
+
   async function handleLoadMorePosts(): Promise<void> {
     fetch(nextPage)
       .then(response => response.json())
       .then(data => {
         setNextPage(data.next_page);
 
-        const newPosts = data.results.map(post => ({
-          uid: post.uid,
-          first_publication_date: format(
-            new Date(post.first_publication_date),
-            'd MMM YYY',
-            {
-              locale: ptBR,
-            }
-          ).toLowerCase(),
-          data: {
-            author: post.data.author,
-            subtitle: post.data.subtitle,
-            title: post.data.title,
-          },
-        }));
+        const newPosts = createNewPost(data.results);
         setPosts([...posts, ...newPosts]);
       });
   }
@@ -80,7 +78,15 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
                 <p>{post.data.subtitle}</p>
                 <div className={commonStyles.postInfo}>
                   <FiCalendar />
-                  <time>{post.first_publication_date}</time>
+                  <time>
+                    {format(
+                      new Date(post.first_publication_date),
+                      'd MMM YYY',
+                      {
+                        locale: ptBR,
+                      }
+                    ).toLowerCase()}
+                  </time>
                   <FiUser />
                   <span>{post.data.author}</span>
                 </div>
@@ -103,33 +109,30 @@ export const getStaticProps: GetStaticProps = async () => {
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
     {
-      fetch: ['post.title'],
+      fetch: ['post.title', 'post.author', 'post.subtitle'],
       pageSize: 10,
+      page: 1,
     }
   );
 
-  const postsPagination = {
-    next_page: postsResponse.next_page,
-    results: postsResponse.results.map(result => ({
-      uid: result.uid,
-      first_publication_date: format(
-        new Date(result.last_publication_date),
-        'd MMM YYY',
-        {
-          locale: ptBR,
-        }
-      ),
+  const posts = postsResponse.results.map(post => {
+    return {
+      uid: post.uid,
+      first_publication_date: post.first_publication_date,
       data: {
-        title: result.data.title,
-        subtitle: result.data.subtitle,
-        author: result.data.author,
+        title: post.data.title,
+        subtitle: post.data.subtitle,
+        author: post.data.author,
       },
-    })),
-  };
+    };
+  });
 
   return {
     props: {
-      postsPagination,
+      postsPagination: {
+        next_page: postsResponse.next_page,
+        results: posts,
+      },
     },
   };
 };
