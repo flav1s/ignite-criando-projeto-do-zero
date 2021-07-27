@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { RichText } from 'prismic-dom';
 import { FiClock, FiCalendar, FiUser } from 'react-icons/fi';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { getPrismicClient } from '../../services/prismic';
 
@@ -34,6 +35,7 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
 }
 
 export const UtterancesComments: React.FC = () => (
@@ -55,7 +57,7 @@ export const UtterancesComments: React.FC = () => (
   />
 );
 
-export default function Post({ post }: PostProps): JSX.Element {
+export default function Post({ post, preview }: PostProps): JSX.Element {
   const { isFallback } = useRouter();
 
   const totalWords = post.data.content.reduce((acc, contentItem) => {
@@ -107,6 +109,13 @@ export default function Post({ post }: PostProps): JSX.Element {
           ))}
         </div>
         <UtterancesComments />
+        {preview && (
+          <aside>
+            <Link href="/api/exit-preview">
+              <a className={commonStyles.preview}>Sair do modo Preview</a>
+            </Link>
+          </aside>
+        )}
       </main>
     </>
   );
@@ -132,14 +141,20 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
   const { slug } = params;
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', String(slug), {});
+  const response = await prismic.getByUID('posts', String(slug), {
+    ref: previewData?.ref || null,
+  });
 
   return {
-    props: { post: response },
+    props: { post: response, preview },
     revalidate: 60 * 30, // 30 minutes
   };
 };
