@@ -18,6 +18,7 @@ import styles from './post.module.scss';
 
 interface Post {
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -95,6 +96,16 @@ export default function Post({ post, preview }: PostProps): JSX.Element {
             <FiClock />
             <span>{readTime > 0 ? `${readTime} min` : 'Carregando'}</span>
           </div>
+          <div className={styles.editedAt}>
+            * editado em{' '}
+            {format(new Date(post.last_publication_date), 'd MMM YYY', {
+              locale: ptBR,
+            }).toLowerCase()}
+            , às{' '}
+            {format(new Date(post.last_publication_date), 'p', {
+              locale: ptBR,
+            }).toLowerCase()}
+          </div>
           {post.data.content.map((section, index) => (
             // eslint-disable-next-line react/no-array-index-key
             <section className={styles.postSection} key={index}>
@@ -152,7 +163,7 @@ export const getStaticProps: GetStaticProps = async ({
   const response = await prismic.getByUID('posts', String(slug), {
     ref: previewData?.ref || null,
   });
-
+  console.log(response);
   return {
     props: { post: response, preview },
     revalidate: 60 * 30, // 30 minutes
