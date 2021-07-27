@@ -10,7 +10,7 @@
 .content {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 5rem 18rem;
+  padding: 5rem 14rem;
 
   .editedAt {
     margin-top: 1.125rem;
@@ -63,5 +63,29 @@
     a {
       color: var(--highlight);
     }
+  }
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding: 0 14rem;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: var(--heading);
+    margin-bottom: 0.5rem;
+  }
+
+  a {
+    color: var(--highlight);
+    font-weight: 600;
+  }
+
+  div + div {
+    text-align: right;
   }
 }

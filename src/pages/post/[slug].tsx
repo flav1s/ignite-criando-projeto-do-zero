@@ -36,13 +36,27 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  navigation: {
+    prevPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+    nextPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+  };
   preview: boolean;
 }
 
 export const UtterancesComments: React.FC = () => (
   <section
     ref={elem => {
-      if (!elem) {
+      if (!elem || elem.childNodes.length) {
         return;
       }
       const scriptElem = document.createElement('script');
@@ -58,7 +72,11 @@ export const UtterancesComments: React.FC = () => (
   />
 );
 
-export default function Post({ post, preview }: PostProps): JSX.Element {
+export default function Post({
+  post,
+  navigation,
+  preview,
+}: PostProps): JSX.Element {
   const { isFallback } = useRouter();
 
   const totalWords = post.data.content.reduce((acc, contentItem) => {
@@ -119,7 +137,28 @@ export default function Post({ post, preview }: PostProps): JSX.Element {
             </section>
           ))}
         </div>
+
+        <section className={styles.navigation}>
+          {navigation?.prevPost.length > 0 && (
+            <div>
+              <h3>{navigation.prevPost[0].data.title}</h3>
+              <Link href={`/post/${navigation.prevPost[0].uid}`}>
+                <a>Post anterior</a>
+              </Link>
+            </div>
+          )}
+
+          {navigation?.nextPost.length > 0 && (
+            <div>
+              <h3>{navigation.nextPost[0].data.title}</h3>
+              <Link href={`/post/${navigation.nextPost[0].uid}`}>
+                <a>Próximo post</a>
+              </Link>
+            </div>
+          )}
+        </section>
         <UtterancesComments />
+
         {preview && (
           <aside>
             <Link href="/api/exit-preview">
@@ -163,9 +202,34 @@ export const getStaticProps: GetStaticProps = async ({
   const response = await prismic.getByUID('posts', String(slug), {
     ref: previewData?.ref || null,
   });
-  console.log(response);
+
+  const prevPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date]',
+    }
+  );
+
+  const nextPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.last_publication_date desc]',
+    }
+  );
+
   return {
-    props: { post: response, preview },
+    props: {
+      post: response,
+      navigation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results,
+      },
+      preview,
+    },
     revalidate: 60 * 30, // 30 minutes
   };
 };
